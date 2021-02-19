@@ -3,6 +3,9 @@ Anki JavaScript API to get cards information in reviewer window
 
 This addon is made to work with [AnkiDroid JS API](https://github.com/ankidroid/Anki-Android/wiki/AnkiDroid-Javascript-API).
 
+# Install from AnkiWeb
+https://ankiweb.net/shared/info/1490471827
+
 # Demo
 ![images](images/demo_1.png)
 
