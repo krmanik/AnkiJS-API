@@ -2,6 +2,7 @@ from typing import Any, Tuple
 
 import aqt
 from aqt import gui_hooks, mw
+from anki.scheduler.v3 import Scheduler as V3Scheduler
 
 command_prefix = "AnkiJS."
 
@@ -75,17 +76,18 @@ def on_webview_did_receive_js_message(
             elif cmd == "ankiGetCardODid()":
                 ret = mw.reviewer.card.odid
 
-            elif cmd == "ankiGetNextTime1()":
-                ret = mw.col.sched.nextIvlStr(mw.reviewer.card, 1, True) or "&nbsp;"
-
-            elif cmd == "ankiGetNextTime2()":
-                ret = mw.col.sched.nextIvlStr(mw.reviewer.card, 2, True) or "&nbsp;"
-
-            elif cmd == "ankiGetNextTime3()":
-                ret = mw.col.sched.nextIvlStr(mw.reviewer.card, 3, True) or "&nbsp;"
-
-            elif cmd == "ankiGetNextTime4()":
-                ret = mw.col.sched.nextIvlStr(mw.reviewer.card, 4, True) or "&nbsp;"
+            elif cmd == "ankiGetNextTime1()" or cmd == "ankiGetNextTime2()" or cmd == "ankiGetNextTime3()" or cmd == "ankiGetNextTime4()":
+                i = int(cmd[len("ankiGetNextTime") :][0])
+                if v3 := context._v3:
+                    assert isinstance(mw.col.sched, V3Scheduler)
+                    labels = mw.col.sched.describe_next_states(v3.states)
+                else:
+                    labels = None
+                if mw.col.conf["estTimes"]:
+                    if labels:
+                       ret = labels[i - 1]
+                    else:
+                       ret = mw.col.sched.nextIvlStr(mw.reviewer.card, i, True) or "&nbsp;"
 
         except Exception as e:
             ret = repr(e)
