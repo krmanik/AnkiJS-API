@@ -81,13 +81,10 @@ def on_webview_did_receive_js_message(
                 if v3 := context._v3:
                     assert isinstance(mw.col.sched, V3Scheduler)
                     labels = mw.col.sched.describe_next_states(v3.states)
+                    ret = labels[i - 1]
                 else:
-                    labels = None
-                if mw.col.conf["estTimes"]:
-                    if labels:
-                       ret = labels[i - 1]
-                    else:
-                       ret = mw.col.sched.nextIvlStr(mw.reviewer.card, i, True) or "&nbsp;"
+                    ret = mw.col.sched.nextIvlStr(mw.reviewer.card, i, True) or "&nbsp;"
+                       
 
         except Exception as e:
             ret = repr(e)
