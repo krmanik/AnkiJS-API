@@ -174,3 +174,11 @@ pycmd("AnkiJS.ankiGetNextTime4()", (ret) => {
     console.log(ret);
 });
 ```
+
+## Search in browser
+
+When quotes are needed in the search, e.g. "deck:My Deck" due to spaces in a deck name, they'll need to be escaped as the argument itself must be wrapped with single or double quotes.
+
+```javascript
+pycmd("AnkiJS.ankiSearchCard('\"deck:My Deck\" MyField:*foo*')");
+```
