@@ -3,8 +3,10 @@ from typing import Any, Tuple
 import aqt
 from aqt import gui_hooks, mw
 from anki.scheduler.v3 import Scheduler as V3Scheduler
+import re
 
 command_prefix = "AnkiJS."
+
 
 def on_webview_did_receive_js_message(
     handled: Tuple[bool, Any], message: str, context: Any
@@ -17,7 +19,7 @@ def on_webview_did_receive_js_message(
         ret = None
         try:
             new, lrn, rev = mw.col.sched.counts(mw.reviewer.card)
-            cmd = message[len(command_prefix) :].strip()
+            cmd = message[len(command_prefix):].strip()
             ret = None
             if cmd == "ankiGetNewCardCount()":
                 ret = new
@@ -76,15 +78,36 @@ def on_webview_did_receive_js_message(
             elif cmd == "ankiGetCardODid()":
                 ret = mw.reviewer.card.odid
 
-            elif cmd == "ankiGetNextTime1()" or cmd == "ankiGetNextTime2()" or cmd == "ankiGetNextTime3()" or cmd == "ankiGetNextTime4()":
-                i = int(cmd[len("ankiGetNextTime") :][0])
+            elif (
+                cmd == "ankiGetNextTime1()"
+                or cmd == "ankiGetNextTime2()"
+                or cmd == "ankiGetNextTime3()"
+                or cmd == "ankiGetNextTime4()"
+            ):
+                i = int(cmd[len("ankiGetNextTime"):][0])
                 if v3 := context._v3:
                     assert isinstance(mw.col.sched, V3Scheduler)
                     labels = mw.col.sched.describe_next_states(v3.states)
                     ret = labels[i - 1]
                 else:
                     ret = mw.col.sched.nextIvlStr(mw.reviewer.card, i, True) or "&nbsp;"
-                       
+
+            elif cmd.startswith("ankiSearchCard(") and cmd.endswith(")"):
+                try:
+                    search_term = re.search(
+                        r'ankiSearchCard\(["\']{1}(.+?)["\']{1}\)', cmd
+                    ).group(1)
+                except AttributeError:
+                    search_term = None
+                browser = aqt.dialogs.open("Browser", mw.window())
+                browser.activateWindow()
+                if search_term is not None:
+                    browser.form.searchEdit.lineEdit().setText(search_term)
+                    if hasattr(browser, "onSearch"):
+                        browser.onSearch()
+                    else:
+                        browser.onSearchActivated()
+                ret = mw.findCards(search_term)
 
         except Exception as e:
             ret = repr(e)
@@ -92,5 +115,6 @@ def on_webview_did_receive_js_message(
             return (True, ret)
     else:
         return handled
+
 
 gui_hooks.webview_did_receive_js_message.append(on_webview_did_receive_js_message)
